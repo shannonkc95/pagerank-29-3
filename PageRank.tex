@@ -20,6 +20,7 @@
 \usepackage{tkz-berge}
 \usepackage{listings}
 \usepackage{multirow}
+\usepackage{url}
 \usepackage{color}
 \lstset{language=matlab,frame=single}
 \usepackage[framed,numbered,autolinebreaks,useliterate]{mcode}
@@ -129,7 +130,7 @@ r(P_i) = \displaystyle \sum_{P_j\in B_{P_i }} \frac{r(P_j)}{|P_j|}
 r_{(k+1)}P_i = \displaystyle \sum_{P_j\in B_{P_i }}\frac{r_k(P_j)}{|P_j|}
 \end{equation} When \eqref{iterative} is applied to all pages in the graph, you can calculate a ranking for the pages, so for the graph in figure \ref{Example}, we get the following values for the PageRanks after some iterations: 
 
- \begin{table}[H] \caption{First iterates using \eqref{iterative} on Figure \ref{Example}}
+\begin{table}[H] \caption{First iterates using \eqref{iterative} on Figure \ref{Example}}
  \centering
  \begin{tabular} {c c c |c} 
  Iter. 0 & Iter. 1 & Iter. 2 &  Rank at Iter. 2 \\ [0.5ex] 
@@ -145,8 +146,8 @@ r_{(k+1)}P_i = \displaystyle \sum_{P_j\in B_{P_i }}\frac{r_k(P_j)}{|P_j|}
 \label{table1}
 \end{table}
 
-\section{Matrix Representation}
-\subsection{Hyperlink Matrix}
+\section{Matrix Representation} \label{sec:matrix}
+\subsection{Hyperlink Matrix} \label{sec:hyperlink}
 If we represent the PageRank algorithm using matrices, we are able to compute a 1 x \textit{n} row vector, $\boldsymbol{\pi}^T$, the PageRank vector, at each iteration which contains the PageRank values for all web pages in the hyperlink graph. In order to do this we first introduce the concept of the Hyperlink matrix, a [\textit{n}x\textit{n}] matrix \textbf{H}, which is a row normalized matrix where 
 \(\boldsymbol{H_{ij}} = \begin{cases} \frac{1}{\vert P_j \vert} & P_j\in B_{P_i } \\ 0 & \textnormal{otherwise} \end{cases}\). So for Figure \ref{Example} we are able to produce 
 \[\textbf{H}=\left(
@@ -164,9 +165,9 @@ If we represent the PageRank algorithm using matrices, we are able to compute a 
 
 The non-zero elements of row \textit{i} relate to the outlinking pages of $P_i$, for example, node 1 has outlinks to pages 2, 4 and 6, and so in columns 2, 4 and 6 of \textbf{H} the value in row 1 are $\frac{1}{3}$ and the non-zero elements of column \textit{i} relates to the inlinking pages.
 
-We are able to write \eqref{iterative} as \begin{equation}
+We are able to write \eqref{iterative} as \begin{equation} \label{power H}
 \boldsymbol\pi^{(k+1)T} = \boldsymbol\pi^{(k)T}\textbf{H}
-\end{equation} which shows that the vector $\boldsymbol\pi^T$ is an eigenvector of the matrix \textbf{H} with eigenvalue 1, otherwise known as the stationary vector of \textbf{H}, essentially this is the classical power method applied to \textbf{H}. We are able to observe that \textbf{H} is a very sparse matrix, as the majority of its entries are 0, which is computationally very beneficial, as it reduces the vector-matrix multiplication at each iteration to a linear computation. The formation of \textbf{H} is very similar to the formation of a transition probability matrix for a Markov chain, and it is also noted that \textbf{H} is similar to a stochastic matrix, as all entries are non-negative, however not all rows sum to 1.
+\end{equation}  which shows that the vector $\boldsymbol\pi^T$ is an eigenvector of the matrix \textbf{H} with eigenvalue 1, otherwise known as the stationary vector of \textbf{H}, essentially this is the classical power method applied to \textbf{H}. We are able to observe that \textbf{H} is a very sparse matrix, as the majority of its entries are 0, which is computationally very beneficial, as it reduces the vector-matrix multiplication at each iteration to a linear computation. The formation of \textbf{H} is very similar to the formation of a transition probability matrix for a Markov chain, and it is also noted that \textbf{H} is similar to a stochastic matrix, as all entries are non-negative, however not all rows sum to 1.
 
 From Markov theory, we know that for any starting vector, the power method applied to a matrix, \textbf{M},  will converge to a stationary vector as long as \textbf{M} is stochastic, irreducible and aperiodic. However, \textbf{H} is not guaranteed to converge due to the presence of rank sinks. A rank sink is a page that stores PageRank with each iteration, this can be in the form of dangling nodes, which are nodes that have no outlinks, for example 
 \begin{figure}[h]
@@ -280,91 +281,6 @@ Using matlab code as given in Appendix \ref{app:code},
 
 The power method is useful for solving the PageRank equation as it converges to a unique vector, the PageRank vector, where the $i^{th}$ entry of $\boldsymbol\pi$ relates to the PageRank of \textit{i} \cite{ipsen2005analysis}. The main disadvantage of the power method is that it known to be very slow to converge, with the computation of the PageRank vector taking a few days to complete for the large web graph, but the power method is very simple. As we are able to simplify G to H as shown in \eqref{G in H}, the power method is very storage friendly, this is as for an iteration only a sparse \textbf{H}, a dangling node vector \textbf{a} and the current iterate are required to be stored \cite{langville}. Brin and Page reported that the PageRank vector converges to 2-3 degrees of accuracy within 50-100 iterations \cite{austin}.
 
-%--------------------Improvements
-\chapter{Improvements to the Algorithm}
-
-In this chapter we will discuss various methods of improving the PageRank algorithm in order to improve the accuracy of the PageRank vector for a user. The original algorithm is simplistic in the assumption that a random surfer will move throughout the hyperlink graph without any bias, and so it is not very realistic, as a surfer will be more drawn to pages that interest them specifically, we will discuss this more with respect to the formulation of a Topic-specific PageRank algorithm. Another modified algorithm is the Weighted PageRank which takes into account the importance of the outlinks and inlinks a page has.
-
-References: \cite{baeza2004web}, \cite{bonato}, , \cite{langville}, \cite{manning}, \cite{stata2000term}, \cite{thorson2004modeling}, \cite{tomlin2003new} 
-
-\section{Weighted PageRank}\label{sec:weighted} \cite{xing2004weighted}
-
-When weighted equations applied to example in Figure \ref{Example}, we produce a hyperlink matrix which is different to \textbf{H} produced in section 2.2.1 
-
-\[\textbf{W}_{out}=\left(
-\begin{array}{cccccccc}
-0 & \frac{2}{7} & 0 & \frac{2}{7} & 0 &\frac{3}{7} & 0 & 0 \\
-0 & 0 &\frac{1}{2}& 0 &\frac{1}{2}& 0 & 0 & 0\\
-0 & 0 & 0 & 0 & 1 & 0 & 0 & 0\\
-0 & 0 & 0 & 0 & 1 & 0 & 0 & 0\\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 1\\
-0 & 0 & 0 & \frac{1}{2} & 0 & 0 & 0 & \frac{1}{2} \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
-0 & 0 & 0 & 0 & 1 & 0 & 0 & 0\\
-\end{array}
-\right)	\]
-
-\[\textbf{W}_{in}=\left(
-\begin{array}{cccccccc}
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
-0 & 1 & 0 & 0 & 0 & 0 & 0 & 0\\
-0 & 0 & 0 & 0 & 0 & 1 & 0 & 0\\
-0 & \frac{1}{6} & \frac{1}{6} & \frac{1}{3} & 0 & 0 & 0 & \frac{1}{3}\\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & \frac{2}{5} & 0 & \frac{1}{5} & 0 & \frac{2}{5}\\
-0 & 0 & 0 & 0 & \frac{4}{5} & \frac{1}{5} & 0 & 0\\
-\end{array}
-\right)	\]
-\[\textbf{H}_{WPR}=\left(
-\begin{array}{cccccccc}
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
-0 & 0 & \frac{1}{2} & 0 & \frac{1}{2} & 0 & 0 & 0\\
-0 & 0 & 0 & \frac{1}{2} & 0 & 0 & 0 & \frac{1}{2}\\
-0 & 0 & \frac{1}{12} & 0 & \frac{11}{12} & 0 & 0 & 0\\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & \frac{1}{10} & \frac{8}{10} & 0 & 0 & \frac{1}{10}\\
-0 & 0 & 0 & \frac{1}{10} & 0 & 0 & 0 & \frac{9}{10}\\
-\end{array}
-\right)	\]
-
-Through the same methods as discussed in chapters 2 and 3, we produce a PageRank vector \[\boldsymbol\pi_{WPR} = \left(
-\begin{array}{c}
-0.028 \\
-0.028 \\
-0.097 \\
-0.097 \\
-0.395 \\
-0.028 \\
-0.028 \\
-0.302
-\end{array}
-\right)\]
-when we compare the PageRankings produced by performing the standard algorithm and the weighted algorithm:
-\begin{table}[H] \caption{Comparison of PageRankings produced by standard algorithm and the weighted PageRank algorithm}
- \centering
- \begin{tabular} {c| c c} 
- Node & PR & WPR \\ [0.5ex] 
- \hline
- 1&8&5\\
- 2&6&5\\
- 3&5&3\\
- 4&4&3\\
- 5&2&1\\
- 6&6&5\\
- 7&3&5\\
- 8&1&2\\
- \end{tabular}
- \label{comparison}
-\end{table}
-\cite{langville}, \cite{xing2004weighted}, \cite{baeza2004web}
-\section{Intelligent Surfer}
-\cite{richardson2002intelligent}
-\section{Personalization Vector}
-\section{Topic Specific PageRank}
-\cite{haveliwala1999efficient}, \cite{haveliwala2002topic}
-
 
 %--------------------Comparison to other methods of Ranking webpages
 \chapter{Other Methods of Ranking Web Pages}
@@ -422,7 +338,7 @@ Using matlab code as given in Appendix \ref{app:code}, we are able to compute au
 0.062 & 0.144 & 0.120 & 0.226 & 0.037 & 0.185 & 0 & 0.226
 \end{array}\right)
 \end{eqnarray}
-\section{SALSA method}
+\section{SALSA method} \label{sec:SALSA}
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}
@@ -545,6 +461,8 @@ Global Hub and Authority scores:
 
 \section{Comparing PageRank, HITS and SALSA}
 
+\cite{devi2014comparative}
+
 \begin{table}[H] \caption{Page rankings for Figure \ref{Example} using PR, HITS and SALSA }
  \centering
  \begin{tabular} {c| c| c| c| c| c} 
@@ -563,8 +481,128 @@ Global Hub and Authority scores:
  \label{comparison}
 \end{table}
 
-  
-  
+%--------------------Improvements
+\chapter{Improvements to the PageRank Algorithm}
+
+In this chapter we will discuss various methods of improving the PageRank algorithm in order to improve the accuracy of the PageRank vector for a user. The original algorithm is simplistic in the assumption that a random surfer will move throughout the hyperlink graph without any bias, and so it is not very realistic, as a surfer will be more drawn to pages that interest them specifically, we will discuss this more with respect to the formulation of a Topic-specific PageRank algorithm. Another modified algorithm is the Weighted PageRank which takes into account the importance of the outlinks and inlinks a page has \cite{xing2004weighted}. We can also use Weighted Links Rank, WL Rank, which considers different web page attributes to give different weights to some links, this algorithm gives more weight to links at the beginning of pages \cite{baeza2004web}.
+
+\section{Intelligent Surfer}
+PageRank as an algorithm ranks a page highly if it is at the centre of a hyper graph, however the highest ranked pages should also be relevant to the query. We can solve this by the PageRank algorithm by the use of an intelligent surfer as opposed to a random surfer. The intelligent surfer will be more likely to jump to a more content-filled page, and so these pages should be assigned a greater weight \cite{langville}. In practice, the hyperlink matrix could be formed from using access logs in order to find the tendencies of the surfer. 
+
+The use of an intelligent surfer outperforms the standard PageRank algorithm in terms of the quality of the pages, whilst still being efficient enough in terms of being a practical search engine \cite{richardson2002intelligent}. 
+
+This algorithm can be viewed as a solution to topic drift, as discussed in Section \ref{sec:SALSA}, as only relevant topics will be  given. In order to ensure that the algorithm is efficient, the majority of the computation is performed at crawl time, rather than at query time \cite{richardson2002intelligent}. 
+
+\section{Weighted PageRank}\label{sec:weighted}
+Weighted PageRank algorithm differs from the standard algorithm by assigning more value to important pages rather than diving the rank equally, as each outlink page receives a value which is proportional to its popularity \cite{xing2004weighted}. $W^{in}_{(j,i)}$ is the weight of the link between pages \textit{i} and \textit{j}, which is calculated as 
+\begin{equation}\label{weightin}
+W^{in}_{(j,i)} = \frac{I_i}{\sum_{k\in R(i)}I_k}
+\end{equation}
+where $I_i$ and $I_k$ represent the number of inlinks of pages \textit{i} and \textit{j} respectively, and $R(j)$ is the set of pages that \textit{j} links into. 
+Similarly $W^{out}_{(j,i)}$ is the weight of the link between pages \textit{i} and \textit{j}, and is calculated as
+\begin{equation}\label{weightout}
+W^{out}_{(j,i)} = \frac{O_i}{\sum_{k\in R(i)}O_k}
+\end{equation}
+
+In the example Figure \ref{Example}, Page 2 has 2 outlinks, 3 and 5. The inlinks and outlinks of these pages are, $I_3 = 1$, $I_5 = 4$, $O_3 = 1$ and $O_5 = 1$, and so we can calculate 
+\[W^{in}_{(2,3)} = \frac{I_3}{I_3 + I_5} = \frac{1}{5} \]
+and 
+\[W^{out}_{(2,3)} = \frac{O_3}{O_3 + O_5} = \frac{1}{2} \] 
+
+The original PageRank formula given in Equation \eqref{power H}, is now modified to 
+\begin{equation} \label{WPR formula}
+\boldsymbol\pi^{(k+1)T} = \boldsymbol\pi^{(k)T}\textbf{H}
+\end{equation}
+When Equation \eqref{weightin} and Equation \eqref{weightout} applied to Figure \ref{Example}, we produce a hyperlink matrix which is different to \textbf{H} produced in section \ref{sec:hyperlink}. 
+
+\[\textbf{W}_{out}=\left(
+\begin{array}{cccccccc}
+0 & \frac{2}{7} & 0 & \frac{2}{7} & 0 &\frac{3}{7} & 0 & 0 \\
+0 & 0 &\frac{1}{2}& 0 &\frac{1}{2}& 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 1 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 1 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 1\\
+0 & 0 & 0 & \frac{1}{2} & 0 & 0 & 0 & \frac{1}{2} \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 1 & 0 & 0 & 0\\
+\end{array}
+\right)	\]
+
+\[\textbf{W}_{in}=\left(
+\begin{array}{cccccccc}
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+0 & 1 & 0 & 0 & 0 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 1 & 0 & 0\\
+0 & \frac{1}{6} & \frac{1}{6} & \frac{1}{3} & 0 & 0 & 0 & \frac{1}{3}\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & \frac{2}{5} & 0 & \frac{1}{5} & 0 & \frac{2}{5}\\
+0 & 0 & 0 & 0 & \frac{4}{5} & \frac{1}{5} & 0 & 0\\
+\end{array}
+\right)	\]
+\[\textbf{H}_{WPR}=\left(
+\begin{array}{cccccccc}
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+0 & 0 & \frac{1}{2} & 0 & \frac{1}{2} & 0 & 0 & 0\\
+0 & 0 & 0 & \frac{1}{2} & 0 & 0 & 0 & \frac{1}{2}\\
+0 & 0 & \frac{1}{12} & 0 & \frac{11}{12} & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & \frac{1}{10} & \frac{8}{10} & 0 & 0 & \frac{1}{10}\\
+0 & 0 & 0 & \frac{1}{10} & 0 & 0 & 0 & \frac{9}{10}\\
+\end{array}
+\right)	\]
+
+Through the same methods as discussed in chapters 2 and 3, we produce a PageRank vector \[\boldsymbol\pi_{WPR} = \left(
+\begin{array}{c}
+0.028 \\
+0.028 \\
+0.097 \\
+0.097 \\
+0.395 \\
+0.028 \\
+0.028 \\
+0.302
+\end{array}
+\right)\]
+when we compare the PageRankings produced by performing the standard algorithm and the weighted algorithm:
+\begin{table}[H] \caption{Comparison of PageRankings produced by standard algorithm and the weighted PageRank algorithm}
+ \centering
+ \begin{tabular} {c| c c} 
+ Node & PR & WPR \\ [0.5ex] 
+ \hline
+ 1&8&5\\
+ 2&6&5\\
+ 3&5&3\\
+ 4&4&3\\
+ 5&2&1\\
+ 6&6&5\\
+ 7&3&5\\
+ 8&1&2\\
+ \end{tabular}
+ \label{comparison}
+\end{table}
+\cite{langville}, \cite{xing2004weighted}, \cite{baeza2004web}
+
+
+\section{Personalization Vector}
+
+\section{Topic Specific PageRank}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{Topic-specific_PageRank_Manning.png}
+\caption{Topic-specific PageRank, where a user has 60\% interest in sports, and 40\% interest in politics, taken from \cite{manning}}
+\label{topic-specific}
+\end{figure}
+
+In \ref{topic-specific}, $\alpha$ is 0.9, the user will teleport 6\% to sports pages, and 4\% to politics pages.
+
+
+\cite{haveliwala1999efficient}, \cite{haveliwala2002topic}
+
+
+
 %--------------------Applications
 \chapter{Applications of the PageRank algorithm}
 
@@ -580,7 +618,7 @@ We are able to apply PageRank to large databases such as Wikipedia, for example,
 The PageRank algorithm has been used when studying molecules in chemistry, specifically in MoleculaRnetworks \cite{JCC:JCC22917}, which is a toolkit for identifying a shape of a solvent and exploring the H-bonding in that solvent. 
 \begin{figure}
 \includegraphics[width=\linewidth]{Decomposition_of_simulation_date_into_a_graph_-chem.jpg}
-\caption{Decomposition of simulation data into a graph, \cite{JCC:JCC22917}}
+\caption{Decomposition of simulation data into a graph, taken from \cite{JCC:JCC22917}}
 \label{fig:chem}
 \end{figure}
 We are able to assess changes to the Hydrogen bond network due to the solute through the analysis of the network structure, as a graph is formed where the nodes are water molecules, and links represent potential hydrogen bonds, as shown in Figure \ref{fig:chem}. PageRank of each water molecule is determined by the number of edges connected to it, along with the number of edges connected to the nodes neighbours. As each polyhedron has its own unique PageRank vector, we are able to access a database in order to confirm the polyhedra structure. The use of PageRank is a novel way to extract chemical information, and can enhance the traditional methods used in chemical spectroscopy.
@@ -605,19 +643,17 @@ This application is slightly different to the usual PageRank algorithm, as the g
 \subsection{Durham}
 Jiang showed that PageRank scores are significantly correlated to human movement in four areas of London \cite{doi:10.1080/13658810802022822}, and we will use this methodology as a basis for our analysis of vehicle movement in Durham. 
 \subsubsection{Methodology}
-In order to represent the road network in Durham, we first produce an axial map and then are able to form a connectivity graph. The axial map is produced by taking a map of Durham, Figure \ref{durham map}, and representing the intersections of the roads by a 'The axial map is constructed by taking an accurate map and drawing a set of intersecting lines through all the spaces of the urban grid so that the grid is covered and all rings of circulation are completed.'\cite{space}
-
-
+In order to represent the road network in Durham, we first produce an axial map and then are able to form a connectivity graph. The axial map is produced by taking a map of Durham, Figure \ref{durham map}, and representing the intersections of the roads by a 'The axial map is constructed by taking an accurate map and drawing a set of intersecting lines through all the spaces of the urban grid so that the grid is covered and all rings of circulation are completed.' \cite{Axialmap40:online}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=10cm]{durham_with_colour.jpg}
+\includegraphics[width=\linewidth]{durham_with_colour.jpg}
 \caption{Durham road network}
 \label{durham map}
 \end{figure}
 \begin{figure}[h]
 \centering
-\includegraphics[width=10cm]{axial_colour_label.png}
+\includegraphics[width=\linewidth]{axial_colour_label.png}
 \caption{Durham road network represented by an axial graph}
 \label{durham axial}
 \end{figure}
